@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 
@@ -13,7 +14,9 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 
 app.use((req, res, next) => {
-  res.status(404).send("<h1>404 Page Not Found</h1>");
+  res
+    .status(404)
+    .sendFile(path.join(__dirname, "views", "page-not-found.html"));
 });
 
 app.listen(3000);
