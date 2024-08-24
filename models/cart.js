@@ -12,7 +12,6 @@ module.exports = class Cart {
       let cart = { products: [], totalPrice: 0 };
       if (!err) {
         cart = JSON.parse(fileContent);
-        console.log("no error");
       }
 
       //analyze the cart => find existing product.
