@@ -14,6 +14,7 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const description = req.body.description;
 
+  //create a specific instance of class Product
   const product = new Product(null, title, imageUrl, price, description);
   product.save();
   res.redirect("/");

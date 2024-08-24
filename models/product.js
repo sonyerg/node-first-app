@@ -24,6 +24,7 @@ module.exports = class Product {
     this.description = description;
   }
 
+  //In OOP, specific instance refers to a unique object created from a class.
   save() {
     getProductsFromFile((products) => {
       if (this.id) {
@@ -47,6 +48,8 @@ module.exports = class Product {
     });
   }
 
+  //Static methods belong to the class itself and do not operate on specific instances.
+  //They can be called without creating an object of the class.
   static fetchAll(cb) {
     getProductsFromFile(cb);
   }
@@ -63,8 +66,8 @@ module.exports = class Product {
       const filteredProducts = products.filter((product) => product.id !== id);
 
       fs.writeFile(p, JSON.stringify(filteredProducts), (err) => {
-        if (err) {
-          console.log(`Error deleting product: ${err}`);
+        if (!err) {
+          //TODO: remove from cart
         }
       });
     });
