@@ -16,8 +16,12 @@ exports.postAddProduct = (req, res, next) => {
 
   //create a specific instance of class Product
   const product = new Product(null, title, imageUrl, price, description);
-  product.save();
-  res.redirect("/");
+  product
+    .save()
+    .then(() => {
+      res.redirect("/");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getEditProduct = (req, res, next) => {
