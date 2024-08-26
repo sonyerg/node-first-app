@@ -1,33 +1,31 @@
-const db = require("../utils/datbase");
+const { Sequelize } = require("sequelize");
+//gives back class or constructor function
 
-const Cart = require("./cart");
+const sequelize = require("../utils/datbase");
 
-module.exports = class Product {
-  constructor(id, title, imageUrl, price, description) {
-    this.id = id;
-    this.title = title;
-    this.imageUrl = imageUrl;
-    this.price = price;
-    this.description = description;
-  }
+const Product = sequelize.define("product", {
+  id: {
+    type: Sequelize.INTEGER,
+    autoIncrement: true,
+    primaryKey: true,
+    allowNull: false,
+  },
+  title: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  price: {
+    type: Sequelize.DOUBLE,
+    allowNull: false,
+  },
+  imageUrl: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+});
 
-  //In OOP, specific instance refers to a unique object created from a class.
-  save() {
-    return db.execute(
-      "INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)", //avoid sql injection
-      [this.title, this.price, this.imageUrl, this.description]
-    );
-  }
-
-  //Static methods belong to the class itself and do not operate on specific instances.
-  //They can be called without creating an object of the class.
-  static fetchAll() {
-    return db.execute("SELECT * FROM products");
-  }
-
-  static findById(id) {
-    return db.execute("SELECT * FROM products WHERE products.id = ?", [id]); // Select a single product by id
-  }
-
-  static deleteById(id) {}
-};
+module.exports = Product;

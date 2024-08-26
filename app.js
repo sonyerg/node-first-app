@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const app = express();
 
 const errorController = require("./controllers/error");
+const sequelize = require("./utils/datbase");
 
 // app.set("view engine", "pug");
 app.set("view engine", "ejs");
@@ -23,4 +24,13 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-app.listen(3000);
+//syncs your model to the database by creating the appropriate tables and relations
+sequelize
+  .sync()
+  .then((result) => {
+    // console.log(result);
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
