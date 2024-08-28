@@ -1,4 +1,4 @@
-const { Sequelize } = require("sequelize");
+const Sequelize = require("sequelize");
 //gives back class or constructor function
 
 const sequelize = require("../utils/datbase");
