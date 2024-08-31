@@ -1,29 +1,23 @@
-main {
-  display: flex; /* Added to enable flexbox */
-  justify-content: center; /* Centers content horizontally */
-  align-items: center; /* Centers content vertically */
+.cart__item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  margin: auto;
+  width: 40rem;
+  max-width: 90%;
 }
 
-.cart-item {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px #e1e1e1;
-  padding: 10px 20px;
-  margin: 10px 0;
-  width: 25rem;
+.cart__item {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
 }
 
-.btn {
-  background-color: #f44336; /* Red */
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.btn:hover {
-  background-color: #d32f2f; /* Darker red */
+.cart__item h1,
+.cart__item h2 {
+  margin-right: 1rem;
+  font-size: 1.2rem;
+  margin: 0;
 }
