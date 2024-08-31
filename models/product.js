@@ -1,7 +1,7 @@
 const Sequelize = require("sequelize");
 //gives back class or constructor function
 
-const sequelize = require("../utils/datbase");
+const sequelize = require("../utils/database");
 
 const Product = sequelize.define("product", {
   id: {

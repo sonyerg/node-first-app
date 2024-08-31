@@ -1,6 +1,7 @@
 const Product = require("../models/product");
 
 const Cart = require("../models/cart");
+const { where } = require("sequelize");
 
 exports.getProducts = (req, res, next) => {
   Product.findAll()
@@ -43,7 +44,7 @@ exports.getCart = (req, res, next) => {
   req.user
     .getCart()
     .then((cart) => {
-      console.log(cart);
+      console.log(`Fetched cart`);
 
       return cart.getProducts();
     })
@@ -51,7 +52,7 @@ exports.getCart = (req, res, next) => {
       res.render("shop/cart", {
         path: "/cart",
         pageTitle: "Your Cart",
-        cartProducts: products,
+        cartProducts: products, //inside cart there is cartItem
       });
     })
     .catch((err) => console.log(err));
@@ -83,6 +84,7 @@ exports.postCart = (req, res, next) => {
 
         return product;
       }
+
       return Product.findByPk(productId);
     })
     .then((product) => {
@@ -97,11 +99,25 @@ exports.postCart = (req, res, next) => {
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
-  Product.findById(prodId, (product) => {
-    Cart.deleteProduct(prodId, product.price);
-    res.redirect("/cart");
-  });
+  const productId = req.body.productId;
+
+  req.user
+    .getCart()
+    .then((cart) => {
+      return cart.getProducts({
+        where: {
+          id: productId,
+        },
+      });
+    })
+    .then((products) => {
+      const product = products[0];
+      return product.cartItem.destroy();
+    })
+    .then((result) => {
+      res.redirect("/cart");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getOrders = (req, res, next) => {
