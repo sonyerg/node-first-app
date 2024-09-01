@@ -19,6 +19,10 @@ exports.getProduct = (req, res, next) => {
   const productId = req.params.productId;
   Product.findByPk(productId)
     .then((product) => {
+      if (!product) {
+        return res.redirect("/products");
+      }
+
       res.render("shop/product-detail", {
         path: `/products`, //path to highlight on nav
         pageTitle: product.title,
@@ -121,9 +125,11 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
+  let fetchedCart;
   req.user
     .getCart()
     .then((cart) => {
+      fetchedCart = cart;
       return cart.getProducts();
     })
     .then((products) => {
@@ -141,16 +147,27 @@ exports.postOrder = (req, res, next) => {
         .catch((err) => console.log(err));
     })
     .then((result) => {
+      fetchedCart.setProducts(null);
+    })
+    .then((result) => {
       res.redirect("/orders");
     })
     .catch((err) => console.log(err));
 };
 
 exports.getOrders = (req, res, next) => {
-  res.render("shop/orders", {
-    path: "/orders",
-    pageTitle: "Orders",
-  });
+  req.user
+    .getOrders({ include: ["products"] })
+    .then((orders) => {
+      res.render("shop/orders", {
+        path: "/orders",
+        pageTitle: "Orders",
+        orders,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.getCheckout = (req, res, next) => {
