@@ -68,8 +68,6 @@ sequelize
     }
   })
   .then((user) => {
-    console.log("Username:", user.name, "User Email:", user.email);
-
     return user.getCart().then((cart) => {
       if (!cart) {
         return user.createCart();
@@ -78,7 +76,9 @@ sequelize
     });
   })
   .then((cart) => {
-    app.listen(3000);
+    app.listen(3000, () => {
+      console.log("Node Running on http://localhost:3000");
+    });
   })
   .catch((err) => {
     console.log(err);
