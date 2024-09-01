@@ -70,7 +70,12 @@ sequelize
   .then((user) => {
     console.log("Username:", user.name, "User Email:", user.email);
 
-    return user.createCart();
+    return user.getCart().then((cart) => {
+      if (!cart) {
+        return user.createCart();
+      }
+      return cart;
+    });
   })
   .then((cart) => {
     app.listen(3000);
