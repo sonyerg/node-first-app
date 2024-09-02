@@ -4,7 +4,7 @@ const Cart = require("../models/cart");
 const { where } = require("sequelize");
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  Product.fetchAll()
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
@@ -33,7 +33,7 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.findAll()
+  Product.fetchAll()
     .then((products) => {
       res.render("shop/index", {
         prods: products,
@@ -138,13 +138,15 @@ exports.postOrder = (req, res, next) => {
         .then((order) => {
           return order.addProducts(
             products.map((product) => {
+              //transfer cartItem quantity to orderItem quantity
               product.orderItem = { quantity: product.cartItem.quantity };
-
               return product;
             })
           );
         })
-        .catch((err) => console.log(err));
+        .catch((err) => {
+          console.log(err);
+        });
     })
     .then((result) => {
       fetchedCart.setProducts(null);
