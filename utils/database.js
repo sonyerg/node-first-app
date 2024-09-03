@@ -10,7 +10,7 @@ const mongoConnect = (callback) => {
   MongoClient.connect(uri)
     .then((client) => {
       console.log("Connected to MongoDB");
-      _db = client.db();
+      _db = client.db("shop");
       callback();
     })
     .catch((err) => {

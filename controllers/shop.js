@@ -1,7 +1,6 @@
 const Product = require("../models/product");
 
 const Cart = require("../models/cart");
-const { where } = require("sequelize");
 
 exports.getProducts = (req, res, next) => {
   Product.fetchAll()
@@ -16,8 +15,8 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getProduct = (req, res, next) => {
-  const productId = req.params.productId;
-  Product.findByPk(productId)
+  const prodId = req.params.productId;
+  Product.findById(prodId)
     .then((product) => {
       if (!product) {
         return res.redirect("/products");
