@@ -79,7 +79,7 @@ class User {
     const db = getDb();
 
     return db
-      .collection("user")
+      .collection("users")
       .updateOne(
         { _id: new ObjectId(this._id) },
         { $set: { cart: { items: updatedCartItems } } }
