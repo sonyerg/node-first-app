@@ -50,7 +50,17 @@ userSchema.methods.addToCart = function (product) {
 
   this.cart = updatedCart;
 
-  return this.save(); 
+  return this.save();
+};
+
+userSchema.methods.deleteCartItem = function (productId) {
+  const updatedCart = this.cart.items.filter(
+    (item) => item.productId !== productId
+  );
+
+  this.cart = updatedCart;
+
+  return this.save();
 };
 
 module.exports = mongoose.model("User", userSchema);
