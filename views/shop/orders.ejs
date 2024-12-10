@@ -1,5 +1,6 @@
 <%- include('../includes/head.ejs') %>
-</head>
+        <link rel="stylesheet" href="/css/orders.css">
+    </head>
 
 <body>
     <%- include('../includes/navigation.ejs') %>
@@ -13,8 +14,8 @@
                     <li>
                         <h1>Order - # <%= order._id %></h1>
                         <ul>
-                            <% order.items.forEach(item => { %>
-                                <li><%= item.title %> (<%= item.quantity %>)</li>
+                            <% order.products.forEach(p => { %>
+                                <li><%= p.product.title %> (<%= p.quantity %>)</li>
                             <% }); %>
                         </ul>
                     </li>
