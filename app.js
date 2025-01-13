@@ -9,6 +9,7 @@ require("dotenv").config();
 const app = express();
 
 const errorController = require("./controllers/error");
+const User = require("./models/user");
 
 // app.set("view engine", "pug");
 app.set("view engine", "ejs");
@@ -16,7 +17,7 @@ app.set("views", "views");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
-const User = require("./models/user");
+const authRoutes = require("./routes/auth")
 
 app.use(bodyParser.urlencoded({ extended: false }));
 //redirect request for files to public folder
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
+app.use(authRoutes);
 
 app.use(errorController.get404);
 
