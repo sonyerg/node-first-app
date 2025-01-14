@@ -3,6 +3,7 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const session = require("express-session");
 require("dotenv").config();
 
 //Express js is all about middleware.
@@ -17,11 +18,14 @@ app.set("views", "views");
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
-const authRoutes = require("./routes/auth")
+const authRoutes = require("./routes/auth");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 //redirect request for files to public folder
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({ secret: "secret999", resave: false, saveUninitialized: false })
+);
 
 //If the user is found, it creates a new instance of the User class and attaches it to the req object
 app.use((req, res, next) => {
