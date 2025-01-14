@@ -4,10 +4,15 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
 require("dotenv").config();
 
 //Express js is all about middleware.
 const app = express();
+const store = new MongoDBStore({
+  uri: process.env.MONGODB_URI,
+  collection: "sessions",
+});
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -24,7 +29,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 //redirect request for files to public folder
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
-  session({ secret: "secret999", resave: false, saveUninitialized: false })
+  session({
+    secret: "secret999",
+    resave: false,
+    saveUninitialized: false,
+    store,
+  })
 );
 
 //If the user is found, it creates a new instance of the User class and attaches it to the req object
