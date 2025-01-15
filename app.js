@@ -37,16 +37,6 @@ app.use(
   })
 );
 
-//If the user is found, it creates a new instance of the User class and attaches it to the req object
-app.use((req, res, next) => {
-  User.findById("670e0e936512292ad6b7789a")
-    .then((user) => {
-      req.user = user;
-      next();
-    })
-    .catch((err) => console.log(err));
-});
-
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
