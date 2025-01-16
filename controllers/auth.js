@@ -61,6 +61,7 @@ exports.postSignup = (req, res, next) => {
   User.findOne({ email: email })
     .then((userDoc) => {
       if (userDoc) {
+        console.log(`User ${email} exists already`)
         return res.redirect("/signup");
       }
 
@@ -80,6 +81,7 @@ exports.postSignup = (req, res, next) => {
         });
     })
     .catch((err) => {
+      res.redirect("/signup")
       console.error(err);
     });
 };
