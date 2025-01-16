@@ -3,10 +3,18 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/user");
 
 exports.getLogin = (req, res, next) => {
-  console.log(req.session.isLoggedIn);
+  let message = req.flash("error");
+
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
+
   res.render("auth/login", {
     path: "/login",
     pageTitle: "Login",
+    errorMessage: message,
   });
 };
 
@@ -17,7 +25,7 @@ exports.postLogin = (req, res, next) => {
   User.findOne({ email: email })
     .then((user) => {
       if (!user) {
-        console.log(`No user ${email} found`);
+        req.flash("error", "Invalid email or password.");
         return res.redirect("/login");
       }
 
@@ -34,7 +42,7 @@ exports.postLogin = (req, res, next) => {
               res.redirect("/");
             });
           }
-          console.log("Incorrect email or password");
+          req.flash("error", "Invalid email or password.");
           res.redirect("/login");
         })
         .catch((err) => {
@@ -57,13 +65,18 @@ exports.postSignup = (req, res, next) => {
   const password = req.body.password;
   const confirmPassword = req.body.confirmPassword;
 
+  if (password !== confirmPassword) {
+    req.flash("error", "Passwords does not match.");
+    return res.redirect("/signup");
+  }
+
   User.findOne({ email: email })
     .then((userDoc) => {
       if (userDoc) {
-        console.log(`User ${email} exists already`)
+        req.flash("error", "User exist already.");
         return res.redirect("/signup");
       }
-
+      
       return bcrypt
         .hash(password, 12)
         .then((hashedPassword) => {
@@ -80,14 +93,24 @@ exports.postSignup = (req, res, next) => {
         });
     })
     .catch((err) => {
-      res.redirect("/signup")
+      req.flash("error", "There was an error signing up");
+      res.redirect("/signup");
       console.error(err);
     });
 };
 
 exports.getSignup = (req, res, next) => {
+  let message = req.flash("error");
+
+  if (message.length > 0) {
+    message = message[0];
+  } else {
+    message = null;
+  }
+
   res.render("auth/signup", {
     path: "/signup",
     pageTitle: "Signup",
+    errorMessage: message,
   });
 };
