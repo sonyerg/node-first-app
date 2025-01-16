@@ -181,6 +181,9 @@ form {
 
 .card__image img {
   width: 50%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .card__actions {
