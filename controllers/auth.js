@@ -1,6 +1,17 @@
 const bcrypt = require("bcryptjs");
+const nodemailer = require("nodemailer");
+const { MailtrapClient } = require("mailtrap");
 
 const User = require("../models/user");
+
+const transporter = nodemailer.createTransport({
+  host: "live.smtp.mailtrap.io",
+  port: 587,
+  auth: {
+    user: "api",
+    pass: "a18922ae199b7f3f731f918365cfc632",
+  },
+});
 
 exports.getLogin = (req, res, next) => {
   let message = req.flash("error");
@@ -76,7 +87,7 @@ exports.postSignup = (req, res, next) => {
         req.flash("error", "User exist already.");
         return res.redirect("/signup");
       }
-      
+
       return bcrypt
         .hash(password, 12)
         .then((hashedPassword) => {
@@ -89,7 +100,28 @@ exports.postSignup = (req, res, next) => {
           return user.save();
         })
         .then((result) => {
-          res.redirect("/login");
+          return transporter.sendMail(
+            {
+              from: "info@demomailtrap.com",
+              to: email,
+              subject: "Sign up with NodeShop is successful!",
+              text: "You can now login in NodeShop with your credentials.",
+            },
+            (error, info) => {
+              if (error) {
+                console.error("Error sending email", error);
+                req.flash("error", "Error creating your account.");
+              } else {
+                console.log("Email sent:", info.response);
+                res.redirect("/login");
+              }
+            }
+          );
+        })
+        .catch((err) => {
+          req.flash("error", "Error creating your account.");
+          res.redirect("/signup");
+          console.log(err);
         });
     })
     .catch((err) => {
