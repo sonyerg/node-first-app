@@ -2,6 +2,7 @@ const crypto = require("crypto");
 
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
+const { validationResult } = require("express-validator");
 
 const User = require("../models/user");
 
@@ -225,8 +226,8 @@ exports.getNewPassword = (req, res, next) => {
   })
     .then((user) => {
       if (!user) {
-        req.flash('error', 'Invalid or expired password reset token.');
-        return res.redirect('/reset-pass');
+        req.flash("error", "Invalid or expired password reset token.");
+        return res.redirect("/reset-pass");
       }
 
       let message = req.flash("error");
@@ -246,8 +247,8 @@ exports.getNewPassword = (req, res, next) => {
     })
     .catch((err) => {
       console.error(err);
-      req.flash('error', 'An error occurred. Please try again.');
-      res.redirect('/reset-pass');
+      req.flash("error", "An error occurred. Please try again.");
+      res.redirect("/reset-pass");
     });
 };
 
