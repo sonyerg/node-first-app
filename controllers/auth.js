@@ -32,38 +32,20 @@ exports.getLogin = (req, res, next) => {
 };
 
 exports.postLogin = (req, res, next) => {
-  const email = req.body.email;
-  const password = req.body.password;
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    req.flash("error", errors.array()[0].msg);
+    return res.redirect("/login");
+  }
 
-  User.findOne({ email: email })
-    .then((user) => {
-      if (!user) {
-        req.flash("error", "Invalid email or password.");
-        return res.redirect("/login");
-      }
-
-      bcrypt
-        .compare(password, user.password)
-        .then((doMatch) => {
-          if (doMatch) {
-            console.log(`Successfully logged in! ID: ${user._id}`);
-
-            req.session.isLoggedIn = true;
-            req.session.user = user;
-            return req.session.save((err) => {
-              console.error(err);
-              res.redirect("/");
-            });
-          }
-          req.flash("error", "Invalid email or password.");
-          res.redirect("/login");
-        })
-        .catch((err) => {
-          console.error(err);
-          return res.redirect("login");
-        });
-    })
-    .catch((err) => console.error(err));
+  // User is already validated and stored in req.temporaryUser
+  req.session.isLoggedIn = true;
+  req.session.user = req.temporaryUser;
+  req.session.save((err) => {
+    if (err) console.error(err);
+    res.redirect("/");
+  });
 };
 
 exports.postLogout = (req, res, next) => {
@@ -76,20 +58,20 @@ exports.postLogout = (req, res, next) => {
 exports.postSignup = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-  const confirmPassword = req.body.confirmPassword;
+  const errors = validationResult(req);
 
-  if (password !== confirmPassword) {
-    req.flash("error", "Passwords does not match.");
-    return res.redirect("/signup");
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+
+    return res.status(422).render("auth/signup", {
+      path: "/signup",
+      pageTitle: "Signup",
+      errorMessage: errors.array()[0].msg,
+    });
   }
 
   User.findOne({ email: email })
     .then((userDoc) => {
-      if (userDoc) {
-        req.flash("error", "User exist already.");
-        return res.redirect("/signup");
-      }
-
       return bcrypt
         .hash(password, 12)
         .then((hashedPassword) => {
