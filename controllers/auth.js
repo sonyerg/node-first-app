@@ -33,10 +33,10 @@ exports.getLogin = (req, res, next) => {
 
 exports.postLogin = (req, res, next) => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
     req.flash("error", errors.array()[0].msg);
-    return res.redirect("/login");
+    return res.status(422).redirect("/login");
   }
 
   // User is already validated and stored in req.temporaryUser
@@ -67,6 +67,7 @@ exports.postSignup = (req, res, next) => {
       path: "/signup",
       pageTitle: "Signup",
       errorMessage: errors.array()[0].msg,
+      oldInput: { email, password },
     });
   }
 
@@ -97,7 +98,8 @@ exports.postSignup = (req, res, next) => {
                 req.flash("error", "Error creating your account.");
               } else {
                 console.log("Email sent:", info.response);
-                res.redirect("/login");
+                req.session.signupSuccess = true;
+                res.redirect("/success");
               }
             }
           );
@@ -128,6 +130,7 @@ exports.getSignup = (req, res, next) => {
     path: "/signup",
     pageTitle: "Signup",
     errorMessage: message,
+    oldInput: { email: "", password: "" },
   });
 };
 
@@ -268,4 +271,11 @@ exports.postNewPassword = (req, res, next) => {
     .catch((err) => {
       console.error(err);
     });
+};
+
+exports.getSuccess = (req, res, next) => {
+  res.render("auth/success", {
+    path: "/success",
+    pageTitle: "Sign Up Successful!",
+  });
 };

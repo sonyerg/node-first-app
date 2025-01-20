@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const authController = require("../controllers/auth");
 const User = require("../models/user");
+const signupSuccess = require("../middleware/signup-success");
 
 const router = express.Router();
 
@@ -26,12 +27,12 @@ router.post(
       if (!req.temporaryUser) {
         return Promise.reject("Invalid email or password.");
       }
-      
+
       const doMatch = await bcrypt.compare(value, req.temporaryUser.password);
       if (!doMatch) {
         return Promise.reject("Invalid email or password.");
       }
-      
+
       console.log(`Successfully logged in! ID: ${req.temporaryUser._id}`);
       return true;
     }),
@@ -52,7 +53,7 @@ router.post(
       .custom(async (value, { req }) => {
         const userDoc = await User.findOne({ email: value });
         if (userDoc) {
-          return Promise.reject("The email is already been used.");
+          return Promise.reject("The email is already taken");
         }
       }),
     body("password", "Password should be more than 6 characters.").isLength({
@@ -76,5 +77,7 @@ router.post("/reset-pass", authController.postResetPass);
 router.get("/reset-pass/:token", authController.getNewPassword);
 
 router.post("/new-password", authController.postNewPassword);
+
+router.get("/success", signupSuccess, authController.getSuccess);
 
 module.exports = router;
