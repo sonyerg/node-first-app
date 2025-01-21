@@ -13,12 +13,26 @@
         <form class="login-form" action="/login" method="POST">
             <div class="form-control">
                 <label for="email">Email</label>
-                <input type="text" name="email" id="email">
+                <input
+                    class="<%= validationErrors.length > 0 ? 'invalid' : '' %>"  
+                    type="text" 
+                    name="email" 
+                    id="email" 
+                    value="<%= oldInput.email %>"
+                    placeholder="Enter email address"
+                />
             </div>
 
             <div class="form-control">
                 <label for="password">Password</label>
-                <input type="password" name="password" id="password">
+                <input 
+                    class="<%= validationErrors.length > 0 ? 'invalid' : '' %>"  
+                    type="password" 
+                    name="password" 
+                    id="password" 
+                    value="<%= oldInput.password %>"
+                    placeholder="Enter password"
+                />
             </div>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
             <button class="btn" type="submit">Login</button>

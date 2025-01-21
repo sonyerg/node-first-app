@@ -28,24 +28,65 @@ exports.getLogin = (req, res, next) => {
     path: "/login",
     pageTitle: "Login",
     errorMessage: message,
+    oldInput: { email: "", password: "" },
+    validationErrors: [],
   });
 };
 
-exports.postLogin = (req, res, next) => {
+exports.postLogin = async (req, res, next) => {
   const errors = validationResult(req);
+  const email = req.body.email;
+  const password = req.body.password;
+  console.log(errors.array());
 
   if (!errors.isEmpty()) {
-    req.flash("error", errors.array()[0].msg);
-    return res.status(422).redirect("/login");
+    return res.status(422).render("auth/login", {
+      path: "/login",
+      pageTitle: "Login",
+      errorMessage: errors.array()[0].msg,
+      oldInput: { email: req.body.email, password: req.body.password },
+      validationErrors: errors.array(),
+    });
   }
 
-  // User is already validated and stored in req.temporaryUser
-  req.session.isLoggedIn = true;
-  req.session.user = req.temporaryUser;
-  req.session.save((err) => {
-    if (err) console.error(err);
-    res.redirect("/");
-  });
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(422).render("auth/login", {
+        path: "/login",
+        pageTitle: "Login",
+        errorMessage: "Invalid email or password.",
+        oldInput: { email, password },
+        validationErrors: [{ path: 'email' }]
+      });
+    }
+
+    const doMatch = await bcrypt.compare(password, user.password);
+    if (!doMatch) {
+      return res.status(422).render("auth/login", {
+        path: "/login",
+        pageTitle: "Login",
+        errorMessage: "Invalid email or password.",
+        oldInput: { email, password },
+        validationErrors: [{ path: 'password' }]
+      });
+    }
+    
+    req.session.user = user;
+    req.session.isLoggedIn = true;
+    await req.session.save();
+    return res.redirect('/');
+  } catch (err) {
+    console.error("Error login", err);
+    return res.status(422).render("auth/login", {
+      path: "/login",
+      pageTitle: "Login",
+      errorMessage: "An error occurred. Please try again.",
+      oldInput: { email, password },
+      validationErrors: errors.array(),
+    });
+  }
 };
 
 exports.postLogout = (req, res, next) => {

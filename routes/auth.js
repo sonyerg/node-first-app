@@ -13,29 +13,8 @@ router.get("/login", authController.getLogin);
 router.post(
   "/login",
   [
-    check("email")
-      .isEmail()
-      .custom(async (value, { req }) => {
-        const user = await User.findOne({ email: value });
-        if (!user) {
-          return Promise.reject("Invalid email or password.");
-        }
-        req.temporaryUser = user;
-        return true;
-      }),
-    body("password").custom(async (value, { req }) => {
-      if (!req.temporaryUser) {
-        return Promise.reject("Invalid email or password.");
-      }
-
-      const doMatch = await bcrypt.compare(value, req.temporaryUser.password);
-      if (!doMatch) {
-        return Promise.reject("Invalid email or password.");
-      }
-
-      console.log(`Successfully logged in! ID: ${req.temporaryUser._id}`);
-      return true;
-    }),
+    body("email", "Invalid email or password.").isEmail().normalizeEmail(),
+    body("password", "Invalid email or password.").isLength({ min: 3 }).trim(),
   ],
   authController.postLogin
 );
@@ -53,19 +32,19 @@ router.post(
       .custom(async (value, { req }) => {
         const userDoc = await User.findOne({ email: value });
         if (userDoc) {
-          return Promise.reject("The email is already taken");
+          return Promise.reject("The email is already");
         }
-      }),
+      }).normalizeEmail(),
     body("password", "Password should be more than 6 characters.").isLength({
       min: 5,
-    }),
+    }).trim(),
     body("confirmPassword").custom((value, { req }) => {
       if (value !== req.body.password) {
         throw new Error("Passwords does not match.");
       }
 
       return true;
-    }),
+    }).trim(),
   ],
   authController.postSignup
 );
