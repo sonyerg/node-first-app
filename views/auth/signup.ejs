@@ -13,24 +13,36 @@
         <form class="login-form" action="/signup" method="POST" novalidate>
             <div class="form-control">
                 <label for="email">Email</label>
-                <input type="email" name="email" id="email"
-                value="<%= oldInput.email %>" 
-                placeholder="Enter a valid email address"
+                <input
+                    class="<%= validationErrors.find(e => e.path === 'email') ? 'invalid' : '' %>" 
+                    type="email" 
+                    name="email" 
+                    id="email"
+                    value="<%= oldInput.email %>" 
+                    placeholder="Enter a valid email address"
                 />
             </div>
 
             <div class="form-control">
                 <label for="password">Password</label>
-                <input type="password" name="password" id="password" 
-                value="<%= oldInput.password %>" 
-                placeholder="Enter password"
+                <input 
+                    class="<%= validationErrors.find(e => e.path === 'password') ? 'invalid' : '' %>" 
+                    type="password" 
+                    name="password" 
+                    id="password" 
+                    value="<%= oldInput.password %>" 
+                    placeholder="Enter password"
                 />
             </div>
 
             <div class="form-control">
                 <label for="confirmPassword">Confirm Password</label>
-                <input type="password" name="confirmPassword" id="confirmPassword"
-                placeholder="Confirm password"
+                <input 
+                    class="<%= validationErrors.find(e => e.path === 'confirmPassword') ? 'invalid' : '' %>" 
+                    type="password" 
+                    name="confirmPassword" 
+                    id="confirmPassword"
+                    placeholder="Confirm password"
                 >
             </div>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
