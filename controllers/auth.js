@@ -58,7 +58,7 @@ exports.postLogin = async (req, res, next) => {
         pageTitle: "Login",
         errorMessage: "Invalid email or password.",
         oldInput: { email, password },
-        validationErrors: [{ path: 'email' }]
+        validationErrors: [{ path: "email" }],
       });
     }
 
@@ -69,23 +69,18 @@ exports.postLogin = async (req, res, next) => {
         pageTitle: "Login",
         errorMessage: "Invalid email or password.",
         oldInput: { email, password },
-        validationErrors: [{ path: 'password' }]
+        validationErrors: [{ path: "password" }],
       });
     }
-    
+
     req.session.user = user;
     req.session.isLoggedIn = true;
     await req.session.save();
-    return res.redirect('/');
+    return res.redirect("/");
   } catch (err) {
-    console.error("Error login", err);
-    return res.status(422).render("auth/login", {
-      path: "/login",
-      pageTitle: "Login",
-      errorMessage: "An error occurred. Please try again.",
-      oldInput: { email, password },
-      validationErrors: errors.array(),
-    });
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -153,9 +148,9 @@ exports.postSignup = (req, res, next) => {
         });
     })
     .catch((err) => {
-      req.flash("error", "There was an error signing up");
-      res.redirect("/signup");
-      console.error(err);
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
@@ -240,7 +235,9 @@ exports.postResetPass = (req, res, next) => {
         );
       })
       .catch((err) => {
-        console.error("Error reseting password", err);
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
       });
   });
 };
@@ -274,9 +271,9 @@ exports.getNewPassword = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.error(err);
-      req.flash("error", "An error occurred. Please try again.");
-      res.redirect("/reset-pass");
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 
@@ -312,7 +309,9 @@ exports.postNewPassword = (req, res, next) => {
       res.redirect("/login");
     })
     .catch((err) => {
-      console.error(err);
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
     });
 };
 

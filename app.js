@@ -50,6 +50,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+
   if (!req.session.user) {
     return next();
   }
@@ -64,7 +65,7 @@ app.use((req, res, next) => {
       next();
     })
     .catch((err) => {
-      throw new Error(err);
+      next(new Error(err)); //when inside async, use next()
     });
 });
 
@@ -72,7 +73,17 @@ app.use("/admin", adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+app.get("/500", errorController.get500);
+
 app.use(errorController.get404);
+
+app.use((error, req, res, next) => {
+  res.status(500).render("500", {
+    pageTitle: "500 Internal Server Error",
+    path: "/500",
+    isAuthenticated: req.session.isLoggedIn,
+  });
+});
 
 mongoose
   .connect(process.env.MONGODB_URI)

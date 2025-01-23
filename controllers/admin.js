@@ -46,7 +46,11 @@ exports.postAddProduct = (req, res, next) => {
       console.log("Succesfully created product");
       res.redirect("/admin/products");
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
 
 exports.getEditProduct = async (req, res, next) => {
@@ -71,10 +75,12 @@ exports.getEditProduct = async (req, res, next) => {
       product,
       hasError: false,
       errorMessage: null,
-      validationErrors: []
+      validationErrors: [],
     });
   } catch (err) {
-    console.error("Error getEditProduct:", err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -121,8 +127,9 @@ exports.postEditProduct = async (req, res, next) => {
     await product.save();
     return res.redirect("/admin/products");
   } catch (err) {
-    console.error("Error editing product:", err);
-    res.status(500).redirect("/");
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -136,8 +143,9 @@ exports.getProducts = async (req, res, next) => {
       pageTitle: "Admin Products",
     });
   } catch (err) {
-    console.error("Error getting products", err);
-    res.status(500).redirect("/");
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -151,6 +159,8 @@ exports.postDeleteProduct = async (req, res, next) => {
 
     res.redirect("/admin/products");
   } catch (err) {
-    console.error("Error deleting product", err);
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
