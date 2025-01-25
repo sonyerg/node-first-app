@@ -21,13 +21,28 @@ const csrfProtection = csrf();
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    file.filename = "testimage";
     cb(null, "images");
   },
   filename: (req, file, cb) => {
-    cb(null, file.filename + "-" + file.originalname);
+    const date = new Date().toISOString().replace(/:/g, "-");
+
+    cb(null, date + "-" + file.originalname);
   },
 });
+
+const fileFilter = (req, file, cb) => {
+  const mimetype = file.mimetype;
+
+  if (
+    mimetype === "image/jpg" ||
+    mimetype === "image/png" ||
+    mimetype === "image/jpeg"
+  ) {
+    cb(null, true);
+  } else {
+    cb(null, false);
+  }
+};
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -41,7 +56,7 @@ const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ storage: fileStorage }).single("image"));
+app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
 //redirect request for files to public folder
 app.use(express.static(path.join(__dirname, "public")));
 app.use(

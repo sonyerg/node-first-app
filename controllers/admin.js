@@ -14,11 +14,46 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-  const errors = validationResult(req);
   const title = req.body.title;
   const price = req.body.price;
-  const imageUrl = req.file;
+  const image = req.file;
   const description = req.body.description;
+
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render("admin/edit-product", {
+      path: "/admin/add-product",
+      pageTitle: "Add Product",
+      product: {
+        title,
+        price,
+        description,
+      },
+      editing: false,
+      hasError: true,
+      validationErrors: errors.array(),
+      errorMessage: errors.array()[0].msg,
+    });
+  }
+
+  if (!image) {
+    return res.status(422).render("admin/edit-product", {
+      path: "/admin/add-product",
+      pageTitle: "Add Product",
+      product: {
+        title,
+        price,
+        description,
+      },
+      editing: false,
+      hasError: true,
+      validationErrors: [],
+      errorMessage: "Attached file is not an image",
+    });
+  }
+
+  const imageUrl = image.path;
 
   const product = new Product({
     title,
@@ -27,18 +62,6 @@ exports.postAddProduct = (req, res, next) => {
     imageUrl,
     userId: req.user,
   });
-
-  if (!errors.isEmpty()) {
-    return res.status(422).render("admin/edit-product", {
-      path: "/admin/add-product",
-      pageTitle: product.title,
-      product,
-      editing: false,
-      hasError: true,
-      validationErrors: errors.array(),
-      errorMessage: errors.array()[0].msg,
-    });
-  }
 
   product
     .save()
@@ -87,11 +110,10 @@ exports.getEditProduct = async (req, res, next) => {
 exports.postEditProduct = async (req, res, next) => {
   const productId = req.body.productId;
   const updatedTitle = req.body.title;
-  const updatedImageUrl = req.body.imageUrl;
+  const image = req.file;
   const updatedPrice = req.body.price;
   const updatedDescription = req.body.description;
   const errors = validationResult(req);
-  let product;
 
   if (!errors.isEmpty()) {
     console.log(errors.array());
@@ -100,7 +122,6 @@ exports.postEditProduct = async (req, res, next) => {
       pageTitle: "Edit Product",
       product: {
         title: updatedTitle,
-        imageUrl: updatedImageUrl,
         price: updatedPrice,
         description: updatedDescription,
         _id: productId,
@@ -113,16 +134,19 @@ exports.postEditProduct = async (req, res, next) => {
   }
 
   try {
-    product = await Product.findById(productId);
+    const product = await Product.findById(productId);
 
     if (product.userId.toString() !== req.user._id.toString()) {
       return res.redirect("/");
     }
 
     product.title = updatedTitle;
-    product.imageUrl = updatedImageUrl;
     product.price = updatedPrice;
     product.description = updatedDescription;
+
+    if (image) {
+      product.imageUrl = image.path;
+    }
 
     await product.save();
     return res.redirect("/admin/products");
