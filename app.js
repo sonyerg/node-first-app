@@ -7,6 +7,7 @@ const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 const flash = require("connect-flash");
+const multer = require("multer");
 
 require("dotenv").config();
 
@@ -17,6 +18,16 @@ const store = new MongoDBStore({
   collection: "sessions",
 });
 const csrfProtection = csrf();
+
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    file.filename = "testimage";
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.filename + "-" + file.originalname);
+  },
+});
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
@@ -30,6 +41,7 @@ const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(multer({ storage: fileStorage }).single("image"));
 //redirect request for files to public folder
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
@@ -50,7 +62,6 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-
   if (!req.session.user) {
     return next();
   }
