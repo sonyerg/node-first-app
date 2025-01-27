@@ -163,28 +163,46 @@ exports.getCheckout = (req, res, next) => {
 
 exports.getInvoice = (req, res, next) => {
   const orderId = req.params.orderId;
-  
+
   Order.findById(orderId)
-    .then(order => {
+    .then((order) => {
       if (!order) {
-        return next(new Error('No order found.'));
+        return next(new Error("No order found."));
       }
       if (order.user.userId.toString() !== req.user._id.toString()) {
-        return next(new Error('Unauthorized'));
+        return next(new Error("Unauthorized"));
       }
 
       const invoiceName = "invoice-" + orderId + ".pdf";
       const invoicePath = path.join("data", "invoices", invoiceName);
 
-      fs.readFile(invoicePath, (err, data) => {
-        if (err) {
-          return next(err);
-        }
-        
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename="' + invoiceName + '"');
-        res.send(data);
-      });
+      // fs.readFile(invoicePath, (err, data) => {
+      //   if (err) {
+      //     return next(err);
+      //   }
+
+      //   res.setHeader('Content-Type', 'application/pdf');
+      //   res.setHeader('Content-Disposition', 'attachment; filename="' + invoiceName + '"');
+      //   res.send(data);
+      // });
+
+      // createReadStream is the recommended way of getting data for bigger files.
+      const file = fs.createReadStream(invoicePath);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="' + invoiceName + '"'
+      );
+
+      // Without piping, you'd have to manually handle the chunks
+      file.pipe(res); // 'res' is a writable stream
+
+      /**
+        Think of it like a real-world pipe:
+        - Water (data) flows from a source (readable stream)
+        - Through a pipe (.pipe() method)
+        - To a destination (writable stream)  
+      */
     })
-    .catch(err => next(err));
+    .catch((err) => next(err));
 };
