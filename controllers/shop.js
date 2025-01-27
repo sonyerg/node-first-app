@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const PDFDocument = require("pdfkit");
 
 const Product = require("../models/product");
 const Order = require("../models/order");
@@ -176,6 +177,44 @@ exports.getInvoice = (req, res, next) => {
       const invoiceName = "invoice-" + orderId + ".pdf";
       const invoicePath = path.join("data", "invoices", invoiceName);
 
+      const pdfDoc = new PDFDocument();
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="' + invoiceName + '"'
+      );
+
+      pdfDoc.pipe(fs.createWriteStream(invoicePath));
+      pdfDoc.pipe(res);
+
+      pdfDoc.fontSize(20).text("Invoice", {
+        underline: true,
+      });
+
+      pdfDoc.text("-----------------------------------------------------------");
+
+      let totalPrice = 0;
+
+      order.products.forEach((prod) => {
+        totalPrice += prod.quantity * prod.product.price;
+
+        pdfDoc.fontSize(14).text(
+          prod.product.title +
+            " - " +
+            prod.quantity +
+            " x " +
+            "$" +
+            prod.product.price
+        );
+      });
+
+      pdfDoc.text("------");
+
+      pdfDoc.fontSize(20).text("Total: $" + totalPrice);
+
+      pdfDoc.end();
+
       // fs.readFile(invoicePath, (err, data) => {
       //   if (err) {
       //     return next(err);
@@ -187,15 +226,11 @@ exports.getInvoice = (req, res, next) => {
       // });
 
       // createReadStream is the recommended way of getting data for bigger files.
-      const file = fs.createReadStream(invoicePath);
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition",
-        'attachment; filename="' + invoiceName + '"'
-      );
+      // const file = fs.createReadStream(invoicePath);
 
       // Without piping, you'd have to manually handle the chunks
-      file.pipe(res); // 'res' is a writable stream
+      // file.pipe(res);
+      // 'res' is a writable stream
 
       /**
         Think of it like a real-world pipe:
