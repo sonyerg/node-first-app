@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 
 const Product = require("../models/product");
+const fileHelper = require("../utils/file");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
@@ -145,6 +146,8 @@ exports.postEditProduct = async (req, res, next) => {
     product.description = updatedDescription;
 
     if (image) {
+      fileHelper.deleteFile(product.imageUrl);
+
       product.imageUrl = image.path;
     }
 
@@ -175,11 +178,27 @@ exports.getProducts = async (req, res, next) => {
 
 exports.postDeleteProduct = async (req, res, next) => {
   const productId = req.body.productId;
+
   try {
-    await Product.deleteOne({
-      _id: productId,
-      userId: req.user._id,
-    });
+    const product = await Product.findById(productId);
+    
+    if (!product) {
+      return next(new Error("Product not found"));
+    }
+
+    // Check user authorization
+    if (product.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).redirect('/');
+    }
+
+    // Store imageUrl before deletion
+    const imagePath = product.imageUrl;
+    
+    // Delete the product
+    await Product.deleteOne({ _id: productId, userId: req.user._id });
+    
+    // Delete the image file
+    fileHelper.deleteFile(imagePath);
 
     res.redirect("/admin/products");
   } catch (err) {
