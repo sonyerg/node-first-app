@@ -176,8 +176,8 @@ exports.getProducts = async (req, res, next) => {
   }
 };
 
-exports.postDeleteProduct = async (req, res, next) => {
-  const productId = req.body.productId;
+exports.deleteProduct = async (req, res, next) => {
+  const productId = req.params.productId;
 
   try {
     const product = await Product.findById(productId);
@@ -200,10 +200,8 @@ exports.postDeleteProduct = async (req, res, next) => {
     // Delete the image file
     fileHelper.deleteFile(imagePath);
 
-    res.redirect("/admin/products");
+    return res.status(200).json({message: "Delete product success!"})
   } catch (err) {
-    const error = new Error(err);
-    error.httpStatusCode = 500;
-    return next(error);
+    return res.status(500).json({message: "Delete product failed"})
   }
 };
