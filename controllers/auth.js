@@ -98,7 +98,6 @@ exports.postSignup = (req, res, next) => {
 
   if (!errors.isEmpty()) {
     console.log(errors.array());
-
     return res.status(422).render("auth/signup", {
       path: "/signup",
       pageTitle: "Signup",
@@ -108,44 +107,35 @@ exports.postSignup = (req, res, next) => {
     });
   }
 
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      return bcrypt
-        .hash(password, 12)
-        .then((hashedPassword) => {
-          const user = User({
-            email: email,
-            password: hashedPassword,
-            cart: { items: [] },
-          });
-
-          return user.save();
-        })
-        .then((result) => {
-          return transporter.sendMail(
-            {
-              from: "info@demomailtrap.com",
-              to: email,
-              subject: "Sign up with NodeShop is successful!",
-              text: "You can now login in NodeShop with your credentials.",
-            },
-            (error, info) => {
-              if (error) {
-                console.error("Error sending email", error);
-                req.flash("error", "Error creating your account.");
-              } else {
-                console.log("Email sent:", info.response);
-                req.session.signupSuccess = true;
-                res.redirect("/success");
-              }
-            }
-          );
-        })
-        .catch((err) => {
-          req.flash("error", "Error creating your account.");
-          res.redirect("/signup");
-          console.log(err);
-        });
+  bcrypt
+    .hash(password, 12)
+    .then((hashedPassword) => {
+      const user = new User({
+        email: email,
+        password: hashedPassword,
+        cart: { items: [] },
+      });
+      return user.save();
+    })
+    .then((result) => {
+      return transporter.sendMail(
+        {
+          from: "info@demomailtrap.com",
+          to: email,
+          subject: "Sign up with NodeShop is successful!",
+          text: "You can now login in NodeShop with your credentials.",
+        },
+        (error, info) => {
+          if (error) {
+            console.error("Error sending email", error);
+            req.flash("error", "Error creating your account.");
+          } else {
+            console.log("Email sent:", info.response);
+            req.session.signupSuccess = true;
+            res.redirect("/success");
+          }
+        }
+      );
     })
     .catch((err) => {
       const error = new Error(err);
