@@ -2,4 +2,4 @@
 .vscode
 data
 .env
-/images
+# /images
