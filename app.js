@@ -138,9 +138,8 @@ mongoose
   .connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    tlsInsecure: true,
     ssl: true,
-    tls: true,
+    sslValidate: false,
   })
   .then((result) => {
     // https
