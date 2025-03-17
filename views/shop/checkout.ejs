@@ -1,5 +1,7 @@
 <%- include('../includes/head.ejs') %>
     <link rel="stylesheet" href="/css/cart.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/js/stripe.js" defer></script>
     </head>
 
     <body>
@@ -20,8 +22,6 @@
                 </div>
                 <div class="centered">
                     <button id="order-btn" data-session-id="<%= sessionId %>">ORDER</button>
-                    <script src="https://js.stripe.com/v3/"></script>
-                    <script src="/js/stripe.js"></script>
                 </div>
             <% } else { %>
                 <h1>No items in checkout.</h1>

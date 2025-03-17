@@ -19,7 +19,21 @@ require("dotenv").config();
 //Express js is all about middleware.
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
+        connectSrc: ["'self'", "https://api.stripe.com"],
+        imgSrc: ["'self'", "data:", "https://*.stripe.com"],
+      },
+    },
+  })
+);
+
 app.use(compression());
 
 // const accessLogStream = fs.createWriteStream(
