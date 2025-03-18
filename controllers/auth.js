@@ -117,6 +117,15 @@ exports.postSignup = (req, res, next) => {
       });
       return user.save();
     })
+    .then((result) => {
+      res.render("auth/login", {
+        path: "/login",
+        pageTitle: "Login",
+        errorMessage: message,
+        oldInput: { email: "", password: "" },
+        validationErrors: [],
+      });
+    })
     // .then((result) => {
     //   return transporter.sendMail(
     //     {

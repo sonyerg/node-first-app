@@ -32,7 +32,7 @@ router.post(
       .custom(async (value, { req }) => {
         const userDoc = await User.findOne({ email: value });
         if (userDoc) {
-          return Promise.reject("The email is already");
+          return Promise.reject("This email is already taken.");
         }
       }).normalizeEmail(),
     body("password", "Password should be more than 6 characters.").isLength({
