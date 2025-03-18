@@ -118,13 +118,7 @@ exports.postSignup = (req, res, next) => {
       return user.save();
     })
     .then((result) => {
-      res.render("auth/login", {
-        path: "/login",
-        pageTitle: "Login",
-        errorMessage: errors.array()[0].msg,
-        oldInput: { email: "", password: "" },
-        validationErrors: [],
-      });
+      res.redirect("/login");
     })
     // .then((result) => {
     //   return transporter.sendMail(
