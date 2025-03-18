@@ -121,7 +121,7 @@ exports.postSignup = (req, res, next) => {
       res.render("auth/login", {
         path: "/login",
         pageTitle: "Login",
-        errorMessage: message,
+        errorMessage: errors.array()[0].msg,
         oldInput: { email: "", password: "" },
         validationErrors: [],
       });
