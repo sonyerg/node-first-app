@@ -26,9 +26,18 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
         styleSrc: ["'self'", "'unsafe-inline'"],
-        frameSrc: ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
+        frameSrc: [
+          "'self'",
+          "https://js.stripe.com",
+          "https://hooks.stripe.com",
+        ],
         connectSrc: ["'self'", "https://api.stripe.com"],
-        imgSrc: ["'self'", "data:", "https://*.stripe.com"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://*.stripe.com",
+          "https://node-shop-bucket.s3.ap-southeast-2.amazonaws.com",
+        ],
       },
     },
   })
@@ -52,16 +61,16 @@ const csrfProtection = csrf();
 // const privateKey = fs.readFileSync("server.key");
 // const certificate = fs.readFileSync("server.cert");
 
-const fileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "images");
-  },
-  filename: (req, file, cb) => {
-    const date = new Date().toISOString().replace(/:/g, "-");
+// const fileStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, "images");
+//   },
+//   filename: (req, file, cb) => {
+//     const date = new Date().toISOString().replace(/:/g, "-");
 
-    cb(null, date + "-" + file.originalname);
-  },
-});
+//     cb(null, date + "-" + file.originalname);
+//   },
+// });
 
 const fileFilter = (req, file, cb) => {
   const mimetype = file.mimetype;
@@ -77,6 +86,8 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+const storage = multer.memoryStorage();
+
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 
@@ -89,7 +100,7 @@ const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
+app.use(multer({ storage: storage, fileFilter }).single("image"));
 //redirect request for files to public folder
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/images", express.static(path.join(__dirname, "images")));
@@ -153,7 +164,6 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
     ssl: true,
-    sslValidate: false,
   })
   .then((result) => {
     // https

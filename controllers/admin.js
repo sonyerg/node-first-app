@@ -1,7 +1,24 @@
 const { validationResult } = require("express-validator");
+const {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
+const crypto = require("crypto");
 
 const Product = require("../models/product");
 const fileHelper = require("../utils/file");
+
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: process.env.ACCESS_KEY,
+    secretAccessKey: process.env.SECRET_KEY,
+  },
+  region: process.env.BUCKET_REGION,
+});
+
+const randomImageName = (bytes = 32) =>
+  crypto.randomBytes(bytes).toString("hex");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
@@ -14,10 +31,10 @@ exports.getAddProduct = (req, res, next) => {
   });
 };
 
-exports.postAddProduct = (req, res, next) => {
+exports.postAddProduct = async (req, res, next) => {
   const title = req.body.title;
   const price = req.body.price;
-  const image = req.file;
+  const image = req.file.buffer;
   const description = req.body.description;
 
   const errors = validationResult(req);
@@ -54,27 +71,39 @@ exports.postAddProduct = (req, res, next) => {
     });
   }
 
-  const imageUrl = image.path;
+  const imageName = randomImageName();
 
-  const product = new Product({
-    title,
-    price,
-    description,
-    imageUrl,
-    userId: req.user,
+  const command = new PutObjectCommand({
+    Bucket: process.env.BUCKET_NAME,
+    Key: imageName,
+    Body: image,
+    ContentType: req.file.mimetype,
   });
 
-  product
-    .save()
-    .then((result) => {
-      console.log("Succesfully created product");
-      res.redirect("/admin/products");
-    })
-    .catch((err) => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
+  try {
+    const result = await s3.send(command);
+
+    console.log(result);
+
+    // Construct the S3 URL
+    const imageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${imageName}`;
+
+    const product = new Product({
+      title,
+      price,
+      description,
+      imageUrl,
+      userId: req.user,
     });
+
+    await product.save();
+    console.log("Successfully created product");
+    res.redirect("/admin/products");
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
 };
 
 exports.getEditProduct = async (req, res, next) => {
@@ -181,27 +210,40 @@ exports.deleteProduct = async (req, res, next) => {
 
   try {
     const product = await Product.findById(productId);
-    
+
     if (!product) {
       return next(new Error("Product not found"));
     }
 
     // Check user authorization
     if (product.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).redirect('/');
+      return res.status(403).redirect("/");
     }
 
     // Store imageUrl before deletion
-    const imagePath = product.imageUrl;
-    
-    // Delete the product
-    await Product.deleteOne({ _id: productId, userId: req.user._id });
-    
-    // Delete the image file
-    fileHelper.deleteFile(imagePath);
+    // const imagePath = product.imageUrl;
 
-    return res.status(200).json({message: "Delete product success!"})
+    // Delete the product
+    // Get the image key from the URL
+    const imageKey = product.imageUrl.split("/").pop();
+
+    // Delete from S3
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key: imageKey,
+    });
+
+    // Delete from S3 and MongoDB in parallel
+    await Promise.all([
+      s3.send(deleteCommand),
+      Product.deleteOne({ _id: productId, userId: req.user._id }),
+    ]);
+
+    // Delete the image file
+    // fileHelper.deleteFile(imagePath);
+
+    return res.status(200).json({ message: "Delete product success!" });
   } catch (err) {
-    return res.status(500).json({message: "Delete product failed"})
+    return res.status(500).json({ message: "Delete product failed" });
   }
 };
