@@ -210,7 +210,7 @@ exports.postResetPass = (req, res, next) => {
             subject: "Password Reset",
             html: `
               <p>You requested a password reset.</p>
-              <p>Click this <a href="http://localhost:3000/reset-pass/${token}">link</a> to set a new password</p>
+              <p>Click this <a href="https://node-first-app-8j07.onrender.com/reset-pass/${token}">link</a> to set a new password</p>
             `,
           },
           (error, info) => {
