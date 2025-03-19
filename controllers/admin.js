@@ -175,9 +175,19 @@ exports.postEditProduct = async (req, res, next) => {
     product.description = updatedDescription;
 
     if (image) {
-      fileHelper.deleteFile(product.imageUrl);
+      const imageName = randomImageName();
 
-      product.imageUrl = image.path;
+      const command = new PutObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: imageName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      });
+
+      const imageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${imageName}`;
+      product.imageUrl = imageUrl;
+
+      await s3.send(command);
     }
 
     await product.save();
