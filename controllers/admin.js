@@ -2,12 +2,15 @@ const { validationResult } = require("express-validator");
 const {
   PutObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
 } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const crypto = require("crypto");
 
 const Product = require("../models/product");
 const fileHelper = require("../utils/file");
 
+const BUCKET_NAME = process.env.BUCKET_NAME;
 
 const randomImageName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString("hex");
@@ -65,26 +68,31 @@ exports.postAddProduct = async (req, res, next) => {
 
   const imageName = randomImageName();
 
-  const command = new PutObjectCommand({
-    Bucket: process.env.BUCKET_NAME,
+  const putCommand = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
     Key: imageName,
     Body: image,
     ContentType: req.file.mimetype,
   });
 
   try {
-    const result = await req.s3.send(command);
+    await req.s3.send(putCommand);
 
-    console.log(result);
+    const getCommand = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: imageName,
+    });
 
-    // Construct the S3 URL
-    const imageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${imageName}`;
+    const imageUrl = await getSignedUrl(req.s3, getCommand, {
+      expiresIn: 3600,
+    });
 
     const product = new Product({
       title,
       price,
       description,
       imageUrl,
+      imageName,
       userId: req.user,
     });
 
@@ -169,17 +177,31 @@ exports.postEditProduct = async (req, res, next) => {
     if (image) {
       const imageName = randomImageName();
 
-      const command = new PutObjectCommand({
-        Bucket: process.env.BUCKET_NAME,
+      const putCommand = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
         Key: imageName,
-        Body: req.file.buffer,
+        Body: image.buffer,
         ContentType: req.file.mimetype,
       });
 
-      const imageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${imageName}`;
-      product.imageUrl = imageUrl;
+      const getCommand = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: imageName,
+      });
 
-      await req.s3.send(command);
+      const deleteCommand = new DeleteObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: product.imageName,
+      });
+
+      const imageUrl = await getSignedUrl(req.s3, getCommand, {
+        expiresIn: 3600,
+      });
+
+      await Promise.all([req.s3.send(putCommand), req.s3.send(deleteCommand)]);
+
+      product.imageUrl = imageUrl;
+      product.imageName = imageName;
     }
 
     await product.save();
@@ -222,17 +244,10 @@ exports.deleteProduct = async (req, res, next) => {
       return res.status(403).redirect("/");
     }
 
-    // Store imageUrl before deletion
-    // const imagePath = product.imageUrl;
-
-    // Delete the product
-    // Get the image key from the URL
-    const imageKey = product.imageUrl.split("/").pop();
-
     // Delete from S3
     const deleteCommand = new DeleteObjectCommand({
-      Bucket: process.env.BUCKET_NAME,
-      Key: imageKey,
+      Bucket: BUCKET_NAME,
+      Key: product.imageName,
     });
 
     // Delete from S3 and MongoDB in parallel
