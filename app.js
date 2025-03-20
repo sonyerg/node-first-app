@@ -38,6 +38,10 @@ app.use(
           "https://*.stripe.com",
           "https://node-shop-bucket.s3.ap-southeast-2.amazonaws.com",
         ],
+        objectSrc: [
+          "'self'",
+          "https://node-shop-bucket.s3.ap-southeast-2.amazonaws.com",
+        ],
       },
     },
   })
@@ -90,10 +94,16 @@ const storage = multer.memoryStorage();
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
+const s3 = require("./middleware/s3-config");
 
 // app.set("view engine", "pug");
 app.set("view engine", "ejs");
 app.set("views", "views");
+
+app.use((req, res, next) => {
+  req.s3 = s3;
+  next();
+});
 
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");

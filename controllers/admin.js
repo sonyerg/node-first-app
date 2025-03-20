@@ -1,6 +1,5 @@
 const { validationResult } = require("express-validator");
 const {
-  S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
@@ -9,13 +8,6 @@ const crypto = require("crypto");
 const Product = require("../models/product");
 const fileHelper = require("../utils/file");
 
-const s3 = new S3Client({
-  credentials: {
-    accessKeyId: process.env.ACCESS_KEY,
-    secretAccessKey: process.env.SECRET_KEY,
-  },
-  region: process.env.BUCKET_REGION,
-});
 
 const randomImageName = (bytes = 32) =>
   crypto.randomBytes(bytes).toString("hex");
@@ -81,7 +73,7 @@ exports.postAddProduct = async (req, res, next) => {
   });
 
   try {
-    const result = await s3.send(command);
+    const result = await req.s3.send(command);
 
     console.log(result);
 
@@ -187,7 +179,7 @@ exports.postEditProduct = async (req, res, next) => {
       const imageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${imageName}`;
       product.imageUrl = imageUrl;
 
-      await s3.send(command);
+      await req.s3.send(command);
     }
 
     await product.save();
@@ -245,7 +237,7 @@ exports.deleteProduct = async (req, res, next) => {
 
     // Delete from S3 and MongoDB in parallel
     await Promise.all([
-      s3.send(deleteCommand),
+      req.s3.send(deleteCommand),
       Product.deleteOne({ _id: productId, userId: req.user._id }),
     ]);
 
