@@ -217,6 +217,19 @@ exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find({ userId: req.user._id });
 
+    for (const product of products) {
+      const command = new GetObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: product.imageName,
+      });
+
+      const imageUrl = await getSignedUrl(req.s3, command, {
+        expiresIn: 3600,
+      });
+
+      product.imageUrl = imageUrl;
+    }
+
     res.render("admin/products", {
       prods: products,
       path: "/admin/products",

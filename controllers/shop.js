@@ -2,6 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const { GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 const Product = require("../models/product");
 const Order = require("../models/order");
@@ -22,7 +24,20 @@ exports.getProducts = (req, res, next) => {
         .skip((page - 1) * ITEMS_PER_PAGE)
         .limit(ITEMS_PER_PAGE);
     })
-    .then((products) => {
+    .then(async (products) => {
+      for (const product of products) {
+        const command = new GetObjectCommand({
+          Bucket: process.env.BUCKET_NAME,
+          Key: product.imageName,
+        });
+
+        const imageUrl = await getSignedUrl(req.s3, command, {
+          expiresIn: 3600,
+        });
+
+        product.imageUrl = imageUrl;
+      }
+
       res.render("shop/product-list", {
         prods: products,
         path: "/products",
@@ -76,7 +91,20 @@ exports.getIndex = (req, res, next) => {
         .skip((page - 1) * ITEMS_PER_PAGE)
         .limit(ITEMS_PER_PAGE);
     })
-    .then((products) => {
+    .then(async (products) => {
+      for (const product of products) {
+        const command = new GetObjectCommand({
+          Bucket: process.env.BUCKET_NAME,
+          Key: product.imageName,
+        });
+
+        const imageUrl = await getSignedUrl(req.s3, command, {
+          expiresIn: 3600,
+        });
+
+        product.imageUrl = imageUrl;
+      }
+
       res.render("shop/index", {
         prods: products,
         path: "/",
