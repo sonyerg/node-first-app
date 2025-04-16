@@ -57,25 +57,37 @@ exports.getProducts = (req, res, next) => {
     });
 };
 
-exports.getProduct = (req, res, next) => {
+exports.getProduct = async (req, res, next) => {
   const prodId = req.params.productId;
-  Product.findById(prodId)
-    .then((product) => {
-      if (!product) {
-        return res.redirect("/products");
-      }
 
-      res.render("shop/product-detail", {
-        path: `/products`,
-        pageTitle: product.title,
-        product: product,
-      });
-    })
-    .catch((err) => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
+  try {
+    const product = await Product.findById(prodId);
+
+    if (!product) {
+      return res.redirect("/products");
+    }
+    
+    const command = new GetObjectCommand({
+      Bucket: process.env.BUCKET_NAME,
+      Key: product.imageName,
     });
+
+    const imageUrl = await getSignedUrl(req.s3, command, {
+      expiresIn: 3600,
+    });
+
+    product.imageUrl = imageUrl;
+
+    res.render("shop/product-detail", {
+      path: `/products`,
+      pageTitle: product.title,
+      product: product,
+    });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
 };
 
 exports.getIndex = (req, res, next) => {
